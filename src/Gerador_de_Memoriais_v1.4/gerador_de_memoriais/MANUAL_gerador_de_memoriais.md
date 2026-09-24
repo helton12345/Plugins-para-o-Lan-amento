@@ -1,4 +1,4 @@
-# Manual de Instruções — Gerador de Memoriais
+# Manual de Instruções — Conversor de Memoriais Pro
 
 **Pasta:** `gerador_de_memoriais` · versão declarada 1.4 · plugin gratuito (GPL-3.0)
 
@@ -26,7 +26,7 @@ No OSGeo4W Shell (Windows): `python -m pip install python-docx pdfplumber`.
 Reinicie o QGIS.
 
 ## 3. Como abrir
-Menu **Complementos → Precisa Agrimensura → Gerador de Memoriais**, ou ícone
+Menu **Complementos → Precisa Agrimensura → Gerador de Memoriais** (nome atual no menu; o novo nome, Conversor de Memoriais Pro, ainda não foi aplicado ao código), ou ícone
 na barra de ferramentas.
 
 ## 4. Aba 📝 Texto — memorial → geometria

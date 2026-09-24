@@ -1,6 +1,8 @@
-# Divergências do metadata.txt — Gerador de Memoriais
+# Divergências do metadata.txt — Conversor de Memoriais Pro
 
 Somente relatório. **Nenhuma alteração foi feita no `metadata.txt`.**
+
+> **Renomeação (pedido de 24/09/2026):** o plugin passa a se chamar **Conversor de Memoriais Pro**. O `metadata.txt` ainda traz `name=Gerador de Memoriais`, e o código (menu, títulos) também usa o nome antigo. Essa diferença fica registrada aqui até a renomeação ser aplicada ao plugin.
 
 | # | Campo | Declarado | O que o código / pacote mostra | Gravidade |
 |---|---|---|---|---|

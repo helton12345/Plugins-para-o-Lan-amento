@@ -1,4 +1,4 @@
-# Descritivo Técnico-Funcional — Gerador de Memoriais
+# Descritivo Técnico-Funcional — Conversor de Memoriais Pro
 
 **Pasta:** `gerador_de_memoriais` · **Versão declarada:** 1.4 · **QGIS:** 3.16 – 3.99 · **Licença:** GPL-3.0
 **Arquivos lidos:** `__init__.py`, `plugin.py`, `dialog.py`, `parser_texto.py`,
