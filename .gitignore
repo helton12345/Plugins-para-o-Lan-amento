@@ -1,0 +1,7 @@
+# Código-fonte dos plugins fica fora do repositório (contém dados pessoais).
+# Só a documentação gerada é versionada.
+src/**
+!src/**/
+!src/**/MANUAL_*.md
+!src/**/DESCRITIVO_*.md
+!src/**/METADATA_DIVERGENCIA_*.md
