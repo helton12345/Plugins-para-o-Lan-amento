@@ -5,3 +5,4 @@ src/**
 !src/**/MANUAL_*.md
 !src/**/DESCRITIVO_*.md
 !src/**/METADATA_DIVERGENCIA_*.md
+!src/**/CORRECOES_*.md
