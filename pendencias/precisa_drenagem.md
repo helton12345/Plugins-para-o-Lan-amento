@@ -1,6 +1,6 @@
 # Pendências — Precisa Drenagem
 
-Versão atual entregue: **0.9.4** (tc acumulado por trecho).
+Versão atual entregue: **0.9.5** (tabela editável).
 Nada desta lista foi implementado. Cada item traz a causa já diagnosticada e a correção proposta.
 
 ## Histórico das versões desta revisão
@@ -10,6 +10,7 @@ Nada desta lista foi implementado. Cada item traz a causa já diagnosticada e a 
 | 0.9.2 | Trecho sem área (S de 50 %) corrigido; memória: Q própria em L/s com C do trecho, SOBRECARGA/VERIFICAR, município e empreendimento pedidos, parâmetros do último cálculo, textos do método; Whitebox com sub-bacias incrementais e vínculo sem dupla contagem; campo prof. máx. da vala; aviso de cruzamentos fora das pontas |
 | 0.9.3 | Declividade mínima construtiva editável, padrão 0,5 % (FCTH/CDren); alertas em dois níveis (erro/aviso) |
 | 0.9.4 | Método Racional com tc acumulado por trecho (tc de entrada 10 min); opção de tc único para reproduzir projetos antigos |
+| 0.9.5 | Tabela editável: DN fixo por trecho; Área e C gravados na camada de rede; recálculo a cada edição; camadas de saída substituídas a cada cálculo |
 
 ## Pendências abertas
 
@@ -58,8 +59,10 @@ Nada desta lista foi implementado. Cada item traz a causa já diagnosticada e a 
 
 **9. Coeficiente C pela fórmula de Horner**, a partir do percentual impermeável, com C mínimo de 0,05.
 
-**10. Vazão pontual no nó e opções "fixa diâmetro" / "fixa cota" por trecho**
-- Hoje não há edição manual: a tabela é só de leitura e não dá para inverter o sentido.
+**10. Vazão pontual no nó e opção "fixa cota" por trecho**
+- "Fixa diâmetro" já entrou na 0.9.5 (edição do DN na tabela).
+- Faltam: vazão pontual no nó, fixar cota do coletor e inverter o sentido de um trecho.
+- O DN fixo fica só na sessão: some ao fechar o QGIS. Entra junto com "salvar e carregar projeto" (item 3).
 
 **11. Verificação de sarjeta e rua e número de bocas de lobo**
 - Capacidade da via por classe; bocas de 40–45 L/s em declive e de 60–65 L/s em rua plana. É uma função nova.
