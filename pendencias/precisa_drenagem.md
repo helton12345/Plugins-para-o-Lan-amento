@@ -1,6 +1,6 @@
 # Pendências — Precisa Drenagem
 
-Versão atual entregue: **0.9.5** (tabela editável).
+Versão atual entregue: **0.9.6** (camadas de saída atualizadas no lugar).
 Nada desta lista foi implementado. Cada item traz a causa já diagnosticada e a correção proposta.
 
 ## Histórico das versões desta revisão
@@ -10,7 +10,8 @@ Nada desta lista foi implementado. Cada item traz a causa já diagnosticada e a 
 | 0.9.2 | Trecho sem área (S de 50 %) corrigido; memória: Q própria em L/s com C do trecho, SOBRECARGA/VERIFICAR, município e empreendimento pedidos, parâmetros do último cálculo, textos do método; Whitebox com sub-bacias incrementais e vínculo sem dupla contagem; campo prof. máx. da vala; aviso de cruzamentos fora das pontas |
 | 0.9.3 | Declividade mínima construtiva editável, padrão 0,5 % (FCTH/CDren); alertas em dois níveis (erro/aviso) |
 | 0.9.4 | Método Racional com tc acumulado por trecho (tc de entrada 10 min); opção de tc único para reproduzir projetos antigos |
-| 0.9.5 | Tabela editável: DN fixo por trecho; Área e C gravados na camada de rede; recálculo a cada edição; camadas de saída substituídas a cada cálculo |
+| 0.9.5 | Tabela editável: DN fixo por trecho; Área e C gravados na camada de rede; recálculo a cada edição |
+| 0.9.6 | Recalcular atualiza no lugar as camadas drenagem_galerias e drenagem_PVs (mantém estilo, rótulos e arquivo) |
 
 ## Pendências abertas
 
