@@ -1,7 +1,7 @@
 # Pendências — Precisa Drenagem
 
-Versão atual entregue: **0.9.6** (camadas de saída atualizadas no lugar).
-Nada desta lista foi implementado. Cada item traz a causa já diagnosticada e a correção proposta.
+Versão atual entregue: **0.9.9**.
+Das 14 pendências anotadas na 0.9.4, **13 foram implementadas** (0.9.7 a 0.9.9). A que falta (teste real do Whitebox) depende do QGIS do usuário. Abaixo estão o histórico, o que continua aberto e o que conferir no QGIS.
 
 ## Histórico das versões desta revisão
 
@@ -12,74 +12,48 @@ Nada desta lista foi implementado. Cada item traz a causa já diagnosticada e a 
 | 0.9.4 | Método Racional com tc acumulado por trecho (tc de entrada 10 min); opção de tc único para reproduzir projetos antigos |
 | 0.9.5 | Tabela editável: DN fixo por trecho; Área e C gravados na camada de rede; recálculo a cada edição |
 | 0.9.6 | Recalcular atualiza no lugar as camadas drenagem_galerias e drenagem_PVs (mantém estilo, rótulos e arquivo) |
+| 0.9.7 | Área do lote lida em m² e gravada em AREA_HA; lotes que drenam para o fundo somados à frente (opção); lotes/rede em SRC diferente param; nó sem cota interrompe o cálculo; terreno amostrado no SRC certo; seta do sentido do fluxo; salvar/carregar projeto (.json com resultado); ícone; cores DXF DN 800–1500; typing_extensions de reserva |
+| 0.9.8 | Declividade de V mín limitada pela vala (aviso "V < V mín"); C de Horner; vazão pontual no nó; cota de fundo fixa por trecho; inverter sentido (ordem topológica); ponto de deságue no PV vai para o trecho que sai do nó |
+| 0.9.9 | Catálogo IDF com 158 equações (7 formas do CDren/FCTH); verificação de sarjetas (Izzard + fator DAEE/CETESB) e contagem de bocas de lobo; quantitativos (CSV); dividir rede nos cruzamentos; ajuste dos pontos ao talvegue (Whitebox); tela não congela na delineação |
 
 ## Pendências abertas
 
-### Alta prioridade
-
-**1. Área do lote em m² tratada como ha (Individualizar por Lotes)**
-- **Sintoma:** tubos enormes e em SOBRECARGA depois de "Individualizar por Lotes".
-- **Causa:** `drenagem_dialog.py`, `individualizar_bacias_lote_ui` (linhas 834-841 na 0.9.4). O valor do "Campo de área do lote (opcional)" é usado direto como ha, sem conversão. Com o campo em m², cada lote entra 10.000 vezes maior. Sem o campo, a área vem da geometria dividida por 10.000 e sai certa.
-- **Contorno até corrigir:** deixar o campo vazio, rodar "Individualizar por Lotes" de novo (sobrescreve a área da rede) e depois "Calcular".
-- **Correção decidida:** tirar o campo de área do lote OU converter o valor de m² para ha antes de somar. A escolher na implementação.
-- **Pode quebrar:** quem usa um campo que já está em ha.
-
-**2. Delineação Whitebox não foi testada com o Whitebox real (0.9.2)**
-- Só foi testada com simulação: o download do binário foi bloqueado no ambiente de teste.
-- Conferir no QGIS: cada sub-bacia deve receber o número do seu ponto na ordem da camada (1, 2, 3…).
+### Precisa do QGIS do usuário (não dá para testar no ambiente de desenvolvimento)
+**1. Teste real da delineação Whitebox**
+- Nada disso rodou com o Whitebox real: o download do binário foi bloqueado no ambiente de teste. Só houve simulação.
+- Conferir no QGIS:
+  - cada sub-bacia recebe o número do seu ponto (1, 2, 3…);
+  - o ajuste ao talvegue (`snap_pour_points`, raio de 5 m) move os pontos para o lugar certo;
+  - a tela continua respondendo durante o processamento.
 - Usar os DXFs de exemplo do pacote do CDren (ruas, curvas, pluvial pontos).
 
-### Média prioridade
+**2. Roteiro de conferência da 0.9.9 no QGIS**
+- O diálogo foi testado num QGIS simulado (32 verificações).
+- Falta conferir no real:
+  - desenho da tela e colunas novas;
+  - seta do fluxo;
+  - menu do botão direito;
+  - botões "Salvar/Carregar projeto", "Escolher IDF da cidade", "Exportar Quantitativos" e "Dividir rede nos cruzamentos";
+  - camadas GeoPackage (campo `fid`).
 
-**3. Salvar e carregar projeto**
-- Hoje nada fica gravado: camadas, campos, IDF e parâmetros voltam ao padrão sempre que o diálogo abre.
-- **Proposta:** botões "Salvar projeto…" e "Carregar projeto…" com um `.json` de parâmetros e nomes de camadas e campos. Só em `drenagem_dialog.py`.
-- **A confirmar:** se deve salvar também o resultado do cálculo.
+### Melhorias possíveis (não pedidas)
+**3. Preços (SINAPI) nos quantitativos.** Hoje o CSV traz só as quantidades; o orçamento depende da tabela de referência do usuário.
 
-**4. Seta com o sentido do fluxo na camada `drenagem_galerias`**
-- **Causa:** a camada copia a geometria na ordem em que foi desenhada (`_gerar_camadas`); o sentido do fluxo vem depois, da topologia, pela cota.
-- **Proposta:** inverter a geometria de saída quando `mapa[idx][0] != no_mont` e aplicar simbologia com seta no meio da linha. A rede original não é alterada.
-- **Pode quebrar:** nada no cálculo. Perfil e planta DXF usam `no_mont`/`no_jus`, não a geometria.
+**4. Parâmetros de sarjeta na tela.** Altura da lâmina (0,15 m), tg θ (12), n (0,016) e capacidade das bocas de lobo (40/60 L/s) estão fixos no código, com os padrões do CDren. Só a verificação liga/desliga pela tela.
 
-**5. Área pequena ainda gera declividade alta**
-- É o que ficou do item 1 da revisão (opção "b", não aprovada). Exemplo: 0,001 ha dá S = 13,8 % no DN400 com V mín de 0,75 m/s.
-- **Proposta:** limitar a declividade de V mín ao ponto em que a vala chega à profundidade máxima, com o alerta "V < V mín". Alternativa: usar V mín de 0,50 m/s (faixa do CDren).
+**5. Largura de vala para PVC (RibLoc).** Hoje só existe a tabela de concreto. O manual traz também a fórmula máx(D + 0,40; 1,25·D + 0,30).
 
-**6. Ponto de deságue em PV entre dois trechos (vínculo Whitebox)**
-- Hoje vai para o primeiro trecho da camada, que pode ser o de chegada. O total a jusante fica certo.
-- **Ideal:** mandar para o trecho que sai do nó, o que exige conhecer o sentido da rede no momento do vínculo.
+**6. Tempo de concentração inicial por Kerby/George Ribeiro.** O CDren oferece essas fórmulas; hoje o tc de entrada é digitado.
 
-**7. Pontos de deságue sem ajuste ao talvegue**
-- Falta `snap_pour_points` no Whitebox. Um ponto fora do talvegue pode gerar uma bacia minúscula.
+**7. `metadata.txt`.**
+- `tracker` e `repository` ainda apontam para `example.invalid`: faltam os endereços reais.
+- O texto de `about` não descreve as funções novas.
 
-### Baixa prioridade / melhorias (do manual do CDren/FCTH)
+**8. Equação IDF tipo 10 (Santo André, SEMASA).** Não entrou no catálogo: o manual não traz a fórmula.
 
-**8. Biblioteca IDF por estado**
-- São 159 equações no pacote do CDren. 11 têm a mesma forma do plugin (tipo 1); 97 são de Pfafstetter e cerca de 40 são LnLn ou DAEE, que exigem fórmulas novas em `chuva.py`.
-- Citar sempre a fonte de cada equação.
-
-**9. Coeficiente C pela fórmula de Horner**, a partir do percentual impermeável, com C mínimo de 0,05.
-
-**10. Vazão pontual no nó e opção "fixa cota" por trecho**
-- "Fixa diâmetro" já entrou na 0.9.5 (edição do DN na tabela).
-- Faltam: vazão pontual no nó, fixar cota do coletor e inverter o sentido de um trecho.
-- O DN fixo fica só na sessão: some ao fechar o QGIS. Entra junto com "salvar e carregar projeto" (item 3).
-
-**11. Verificação de sarjeta e rua e número de bocas de lobo**
-- Capacidade da via por classe; bocas de 40–45 L/s em declive e de 60–65 L/s em rua plana. É uma função nova.
-
-**12. Quantitativos e orçamento**
-- Largura de vala pelo maior entre D + 0,40 e 1,25·D + 0,30, escavação, empolamento. Preços pelo SINAPI.
-
-**13. Segmentação real nos cruzamentos**
-- Hoje o plugin só avisa (0.9.2). Segmentar exige repartir o campo de área entre os pedaços.
-
-**14. Outros pontos do DESCRITIVO ainda abertos**
-- Nó fora do MDT recebe cota 0.
-- O raster é amostrado sem conferir o SRC.
-- Lotes reprovados ficam fora de qualquer trecho.
-- A delineação roda na thread principal e congela o QGIS.
-- Faltam cores próprias para DN 800–1500 na planta DXF.
-- Falta ícone na barra de ferramentas.
-- O python-docx embarcado precisa de `typing_extensions`, que não vem junto.
-- `metadata.txt`: tracker e repository apontam para `example.invalid`.
+## Critérios e fontes usados (para revisão técnica)
+- **Horner:** C = 0,364·log(t) + 0,0042·P − 0,145, mínimo 0,05 (tela do CDren).
+- **Izzard:** Q0 = 0,375·(tg θ/n)·y^(8/3)·S^(1/2). Fator F (DAEE/CETESB): 0,50 (≤ 0,4 %), 0,80 (1–3 %), 0,50 (5 %), 0,40 (6 %), 0,27 (8 %), 0,20 (≥ 10 %).
+- **Bocas de lobo:** 40 L/s em declive ≥ 1 % e 60 L/s em rua plana (limites inferiores das faixas do manual do CDren).
+- **Largura de vala:** tabela do manual do CDren para tubos de concreto. Escoramento acima de 1,25 m (NR-18).
+- **IDF:** fórmulas das páginas "Equações IDF" do manual do CDren. α de Pfafstetter pela tabela universal de "Chuvas Intensas no Brasil".
