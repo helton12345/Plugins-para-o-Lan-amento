@@ -6,3 +6,4 @@ src/**
 !src/**/DESCRITIVO_*.md
 !src/**/METADATA_DIVERGENCIA_*.md
 !src/**/CORRECOES_*.md
+!src/**/PROTOCOLO_*.md
