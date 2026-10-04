@@ -60,9 +60,9 @@ O token do GitHub precisa da permissão `models:read`. Padrão do OpenRouter (`o
 Medido no código real: prompt do sistema **12.860 caracteres**, 18 ferramentas **16.194 caracteres** → ≈ **9.700 tokens** fixos (teste `test_perfil_completo_continua_grande` > 8.000).
 Isso estoura Groq (8.000 TPM) e GitHub (8.000 de entrada) grátis.
 
-`perfil_enxuto.py` (novo): prompt compacto com todas as regras de segurança (≈ 1.500 tokens) + 5 ferramentas
+`perfil_enxuto.py` (novo): prompt compacto com todas as regras de segurança (≈ 1.500 tokens) + 6 ferramentas
 (`executar_codigo_pyqgis`, `obter_info_projeto`, `reler_diario_execucao`, `ler_memoria_permanente`, `consultar_historico_antigo`) + janela de 3 turnos + memória cortada para começo (800) + fim (2.400 caracteres).
-Total medido: **< 3.500 tokens** (teste). Ligado **só** nas etapas `groq` e `github` da Cadeia mista; padrão do parâmetro = comportamento antigo.
+Total medido: **≈ 2.900 tokens** (teste exige < 4.000). Ligado **só** nas etapas `groq` e `github` da Cadeia mista; padrão do parâmetro = comportamento antigo.
 O bloco do diário (até ≈ 7.500 caracteres ≈ 2.500 tokens) vem na 1ª mensagem e ainda cabe em 8.000.
 **Custo:** nessas etapas o modelo não tem as ferramentas de GitHub, scripts salvos, lições e limpeza (o prompt avisa e manda usar as etapas Gemini).
 
@@ -72,7 +72,7 @@ Diff completo para revisão: `DIFF_2_5_2_para_2_6_0.patch`. Linhas removidas/alt
 
 **NOVOS (nada existia antes):** `descoberta_modelos.py`, `perfil_enxuto.py`, `worker_verificacao.py`, `tests/*`.
 
-**`provedor_ia.py`** (+127 / −6, já com o item 15): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
+**`provedor_ia.py`** (+143 / −6, já com os itens 15 e 16): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
 alteradas: 1446 `SessaoGroq`, 1450 `SessaoOpenRouter`, 1454 `SessaoGitHub` (classe-mãe **e** `_URL`);
 `criar_sessao` (assinatura + ramo `classe_openai`: parâmetro opcional `perfil_enxuto`); `SessaoCadeia._sessao_atual` (+1 linha repassando `perfil_enxuto`).
 Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_tentar_modelos_alternativos`, `SessaoCadeia._eh_erro_escalavel`.
@@ -84,7 +84,7 @@ Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_te
 métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar / Forçar / Cancelar, lista com checkbox, `done`).
 **As listas `_MODELOS_SUGERIDOS["gemini*"]` e `_PERNAS_CADEIA` não foram tocadas.**
 
-**`dock_assistente.py`** (+119 / −10, já com os itens 12 a 13): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
+**`dock_assistente.py`** (+128 / −12, já com os itens 12, 13 e 16): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
 `_garantir_sessao` (chamada do complemento; etapa mista própria — a única linha removida). **`_PERNAS_CADEIA` / `_PERNAS_CADEIA_MISTA` intactas.**
 
 **`metadata.txt`:** `version=2.6.0-teste`. `changelog` não preenchido.
@@ -168,3 +168,14 @@ Além disso, um **erro meu**: o perfil enxuto cortava a memória nos primeiros 2
 - **GitHub "Resposta de listagem inválida (não é JSON)":** sem acesso ao GitHub daqui, não deu para reproduzir. `listar_modelos` agora (1) aceita JSON com BOM, (2) no GitHub tenta uma 2ª vez com `Accept: application/json` e sem o cabeçalho de versão,
   (3) se ainda não vier JSON, mostra HTTP, tipo de conteúdo, **endereço final** (redirecionamento) e o começo da resposta, sem a chave. Esse texto diz qual é a causa real (HTML de login, redirecionamento, proxy, token sem `models:read`…).
 - Testes novos (81 no total). Sem código: em ⚙ escolher a etapa "3. Groq" faz dela a principal e evita voltar ao Gemini enquanto a cota dele não volta (≈ 04h de Brasília).
+
+## 16. Flash-Lite como agente secundário em TODAS as etapas + "não salve edições"
+
+**Pergunta do usuário:** o Flash-Lite faz, na Cadeia mista, as funções de agente secundário (pesquisa e lições) com qualquer IA ativa? **Antes: só com o Gemini.**
+- **Pesquisa** (`consultar_conhecimento_precisa` → `agente_pesquisador`, Flash-Lite): faltava no perfil enxuto de Groq/GitHub. Agora `consultar_conhecimento_precisa` está nas ferramentas enxutas (6 no total; ≈ +260 tokens, perfil ≈ 2.900). A busca roda no Flash-Lite e não pesa na cota da etapa.
+- **Lição 💾** (`agente_redator`, Flash-Lite): as sessões Groq/GitHub/OpenRouter não tinham `texto_da_conversa`, então o painel caía no plano B (pedir ao próprio modelo da etapa, gastando a cota dele; no Groq/GitHub a ferramenta nem existe).
+  `provedor_ia.py`: `_SessaoCompativelComRegrasGemini.texto_da_conversa` (resumo acumulado + turnos antigos + histórico atual, só leitura). OpenAI/DeepSeek/xAI: inalterados.
+- **Regra "NÃO SALVE EDIÇÕES" (qualquer IA):** `dock_assistente.py`, `_SYSTEM_INSTRUCTION` (vale para Gemini, Claude, OpenAI-compatíveis e Claude Code) e `perfil_enxuto.py`: nunca `commitChanges()` nem regravar a camada original; deixar a camada em edição e **avisar o usuário** quais camadas ficaram com edições pendentes para ele salvar. Camadas novas pedidas pelo usuário (exportações) continuam permitidas.
+  A frase antiga ("exige startEditing() antes e commitChanges() depois") foi trocada para não contradizer a regra nova.
+  **Limite conhecido:** é regra de prompt, não trava mecânica. Scripts salvos (`executar_script_salvo`) que já tenham `commitChanges()` dentro continuam gravando; o popup de confirmação do `executar_codigo_pyqgis` continua sendo a trava real.
+- Testes novos (85 no total).
