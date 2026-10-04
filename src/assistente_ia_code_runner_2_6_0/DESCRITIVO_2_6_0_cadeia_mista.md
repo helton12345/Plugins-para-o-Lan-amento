@@ -61,7 +61,7 @@ Medido no código real: prompt do sistema **12.860 caracteres**, 18 ferramentas 
 Isso estoura Groq (8.000 TPM) e GitHub (8.000 de entrada) grátis.
 
 `perfil_enxuto.py` (novo): prompt compacto com todas as regras de segurança (≈ 1.500 tokens) + 5 ferramentas
-(`executar_codigo_pyqgis`, `obter_info_projeto`, `reler_diario_execucao`, `ler_memoria_permanente`, `consultar_historico_antigo`) + janela de 3 turnos + memória cortada em 2.000 caracteres.
+(`executar_codigo_pyqgis`, `obter_info_projeto`, `reler_diario_execucao`, `ler_memoria_permanente`, `consultar_historico_antigo`) + janela de 3 turnos + memória cortada para começo (800) + fim (2.400 caracteres).
 Total medido: **< 3.500 tokens** (teste). Ligado **só** nas etapas `groq` e `github` da Cadeia mista; padrão do parâmetro = comportamento antigo.
 O bloco do diário (até ≈ 7.500 caracteres ≈ 2.500 tokens) vem na 1ª mensagem e ainda cabe em 8.000.
 **Custo:** nessas etapas o modelo não tem as ferramentas de GitHub, scripts salvos, lições e limpeza (o prompt avisa e manda usar as etapas Gemini).
@@ -72,7 +72,7 @@ Diff completo para revisão: `DIFF_2_5_2_para_2_6_0.patch`. Linhas removidas/alt
 
 **NOVOS (nada existia antes):** `descoberta_modelos.py`, `perfil_enxuto.py`, `worker_verificacao.py`, `tests/*`.
 
-**`provedor_ia.py`** (+116 / −5): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
+**`provedor_ia.py`** (+133 / −7, já com o item 15): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
 alteradas: 1446 `SessaoGroq`, 1450 `SessaoOpenRouter`, 1454 `SessaoGitHub` (classe-mãe **e** `_URL`);
 `criar_sessao` (assinatura + ramo `classe_openai`: parâmetro opcional `perfil_enxuto`); `SessaoCadeia._sessao_atual` (+1 linha repassando `perfil_enxuto`).
 Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_tentar_modelos_alternativos`, `SessaoCadeia._eh_erro_escalavel`.
@@ -156,3 +156,15 @@ Não alterados: popup/backup do `executar_codigo_pyqgis`, `FERRAMENTAS_DESTRUTIV
 **Verificado em Qt real** (PyQt5 offscreen, `tests/dialogo_qt_real_script.py`, rodado em processo separado pelo pytest): rolagem presente e vertical ativa em janela pequena; botões fora da rolagem;
 Cadeia mista lista as 5 etapas, guarda chave por provedor, modelo padrão `openai/gpt-4o-mini` no GitHub, etapa mista em chave própria; Fluxo Gemini intacto. É a primeira execução real do diálogo (74 testes no total).
 Ainda não testado: worker de rede, dock completo e aparência no QGIS do Windows.
+
+## 15. "Pulando entre Gemini e Groq" + listagem do GitHub
+
+**Causa (log do usuário):** a cota diária do Gemini (20 pedidos/dia por modelo) esgotou. `SessaoCadeia.enviar_mensagem` voltava à etapa principal 60 s depois de qualquer erro ("recuperando prioridade"): cada mensagem
+recomeçava a lista de modelos do Gemini (4–5 tentativas à toa), caía no Groq de novo e ainda pausava ("Pausei porque o modelo mudou"). Comportamento da 2.5.2, só visível agora que a Cadeia mista é alcançável.
+Além disso, um **erro meu**: o perfil enxuto cortava a memória nos primeiros 2.000 caracteres, e o resumo de passagem entre etapas é colado no FIM da mesma memória — o Groq nunca recebia o contexto ("qual é a próxima ação?").
+- **A — `provedor_ia.py`, `SessaoCadeia`:** `_sem_prioridade_ate`, `_ESPERA_COTA_DIARIA_SEG = 1800`. Quando a etapa **principal** falha por limite **diário** (`SessaoGemini._classificar_cota(...)["tipo"] == "dia"`), a Cadeia não tenta recuperá-la por 30 min.
+  Limite por minuto continua recuperando em 60 s; limite diário de etapa que não é a principal não bloqueia nada. Vale também para o Fluxo Gemini (fica 30 min na reserva em vez de testar a principal a cada minuto).
+- **B — perfil enxuto:** memória = primeiros 800 + últimos 2.400 caracteres (`MAX_CHARS_MEMORIA_INICIO/FIM` em `perfil_enxuto.py`), o resumo de passagem sobrevive.
+- **GitHub "Resposta de listagem inválida (não é JSON)":** sem acesso ao GitHub daqui, não deu para reproduzir. `listar_modelos` agora (1) aceita JSON com BOM, (2) no GitHub tenta uma 2ª vez com `Accept: application/json` e sem o cabeçalho de versão,
+  (3) se ainda não vier JSON, mostra HTTP, tipo de conteúdo, **endereço final** (redirecionamento) e o começo da resposta, sem a chave. Esse texto diz qual é a causa real (HTML de login, redirecionamento, proxy, token sem `models:read`…).
+- Testes novos (81 no total). Sem código: em ⚙ escolher a etapa "3. Groq" faz dela a principal e evita voltar ao Gemini enquanto a cota dele não volta (≈ 04h de Brasília).
