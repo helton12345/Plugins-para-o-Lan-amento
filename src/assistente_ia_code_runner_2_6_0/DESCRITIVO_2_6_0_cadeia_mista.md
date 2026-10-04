@@ -79,7 +79,7 @@ Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_te
 
 **`configuracoes.py`** (+12 / −0): `_MODELOS_PADRAO` (+`github`, +`openrouter`); novas `obter_etapa_cadeia_mista` / `salvar_etapa_cadeia_mista`.
 
-**`dialog_configuracoes.py`** (+228 / −5): `_PROVEDORES` (+`cadeia_mista`); novas `_PERNAS_CADEIA_MISTA`, `_PROVEDORES_VERIFICACAO`, `_ICONES_STATUS`, `_MODELOS_SUGERIDOS.update(...)` (só chaves groq/github/openrouter) e `_PROVEDORES_FOLHA += [...]`;
+**`dialog_configuracoes.py`** (+239 / −5, já com o item 14): `_PROVEDORES` (+`cadeia_mista`); novas `_PERNAS_CADEIA_MISTA`, `_PROVEDORES_VERIFICACAO`, `_ICONES_STATUS`, `_MODELOS_SUGERIDOS.update(...)` (só chaves groq/github/openrouter) e `_PROVEDORES_FOLHA += [...]`;
 `__init__` (whitelist do provedor; `_repopular_pernas` + `_etapa_salva_para`; grupo no layout); `_slot_atual`, `_atualizar_visibilidade_campos`, `_ao_mudar_provedor`, `salvar_e_fechar` (etapa mista em chave própria; `_gravar_modelos_marcados`);
 métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar / Forçar / Cancelar, lista com checkbox, `done`).
 **As listas `_MODELOS_SUGERIDOS["gemini*"]` e `_PERNAS_CADEIA` não foram tocadas.**
@@ -148,3 +148,11 @@ Diagnóstico: o diário só era lido na 1ª mensagem; com o projeto ainda sem ar
 O código das funções permanece: **para religar, esvazie `FERRAMENTAS_DESLIGADAS`**.
 `dock_assistente.py`: parágrafo "LIMPEZA DE ARQUIVOS NÃO USADOS: está DESLIGADA…" ao final de `_SYSTEM_INSTRUCTION`. `perfil_enxuto.py`: frase ajustada. Teste novo (73 no total).
 Não alterados: popup/backup do `executar_codigo_pyqgis`, `FERRAMENTAS_DESTRUTIVAS_LOCAIS`, `_PASTAS_BACKUP_IGNORADAS`.
+
+## 14. Janela de configuração com barras de rolagem (pedido do usuário)
+
+`dialog_configuracoes.py`, só o trecho de layout do `__init__`: formulário + grupo "Modelos verificados" dentro de `QScrollArea` (`setWidgetResizable(True)`, barras vertical e horizontal "conforme necessário");
+**OK/Cancelar ficam fixos fora da rolagem**; tamanho inicial 780×620. Import acrescentado: `QScrollArea`, `QWidget`. Lógica dos campos, visibilidade por provedor e gravação: inalteradas.
+**Verificado em Qt real** (PyQt5 offscreen, `tests/dialogo_qt_real_script.py`, rodado em processo separado pelo pytest): rolagem presente e vertical ativa em janela pequena; botões fora da rolagem;
+Cadeia mista lista as 5 etapas, guarda chave por provedor, modelo padrão `openai/gpt-4o-mini` no GitHub, etapa mista em chave própria; Fluxo Gemini intacto. É a primeira execução real do diálogo (74 testes no total).
+Ainda não testado: worker de rede, dock completo e aparência no QGIS do Windows.
