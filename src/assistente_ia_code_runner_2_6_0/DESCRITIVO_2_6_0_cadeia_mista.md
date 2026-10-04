@@ -48,15 +48,12 @@ resultados de busca (fontes secundárias, exceto onde indicado). **Confirme na 1
 
 **Riscos:** (1) limites são de terceiros; (2) o modelo `:free` do OpenRouter muda toda hora; (3) ping com `max_tokens=64` pode cortar modelo "raciocinador" antes da chamada — vira `erro (inconclusivo)`, não `sem_ferramentas`.
 
-## 5. ⚠️ PENDÊNCIA que precisa da sua decisão — endereço do GitHub Models
+## 5. Endereço do GitHub Models — ATUALIZADO (aprovado pelo usuário)
 
-O prompt manda parar e perguntar quando o endereço mudou. **Mudou:** o código usa `https://models.inference.ai.azure.com/chat/completions`
-(`SessaoGitHub._URL`, não alterei); a API atual é `https://models.github.ai/inference/chat/completions`, e os ids do catálogo são `publisher/modelo` (ex.: `openai/gpt-4.1`).
-
-Consequência hoje: a **verificação** usa o endereço novo, mas a **Cadeia** usa o antigo. Modelo GitHub marcado no catálogo pode dar 404 na Cadeia
-(que avança sozinha para a próxima etapa, sem travar). **Correção de 1 linha**, aguardando seu OK:
-`provedor_ia.py`, em `class SessaoGitHub`: `_URL = "https://models.github.ai/inference/chat/completions"`.
-Também ficou como padrão `github: gpt-4o-mini` (id antigo) e `openrouter: openai/gpt-oss-20b:free` — chutes; "Verificar modelos" descobre os reais.
+`provedor_ia.py`, `SessaoGitHub._URL`: `https://models.inference.ai.azure.com/chat/completions` → `https://models.github.ai/inference/chat/completions`
+(único uso do endereço antigo no plugin; verificação e Cadeia agora usam o mesmo). Ids passam a ser `publisher/modelo`:
+padrão `github: openai/gpt-4o-mini` (configuracoes.py) e sugestões `openai/gpt-4o-mini`, `openai/gpt-4o` (dialog). Se você já tinha salvo um id antigo (ex.: `gpt-4o`) em ⚙, troque para `openai/gpt-4o`.
+O token do GitHub precisa da permissão `models:read`. Padrão do OpenRouter (`openai/gpt-oss-20b:free`) continua um chute: "Verificar modelos" descobre os reais.
 
 ## 6. Fase 3 — perfil enxuto (implementado, desligado por padrão)
 
@@ -75,8 +72,8 @@ Diff completo para revisão: `DIFF_2_5_2_para_2_6_0.patch`. Linhas removidas/alt
 
 **NOVOS (nada existia antes):** `descoberta_modelos.py`, `perfil_enxuto.py`, `worker_verificacao.py`, `tests/*`.
 
-**`provedor_ia.py`** (+116 / −4): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
-alteradas: 1446 `SessaoGroq`, 1450 `SessaoOpenRouter`, 1454 `SessaoGitHub` (só a classe-mãe);
+**`provedor_ia.py`** (+116 / −5): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
+alteradas: 1446 `SessaoGroq`, 1450 `SessaoOpenRouter`, 1454 `SessaoGitHub` (classe-mãe **e** `_URL`);
 `criar_sessao` (assinatura + ramo `classe_openai`: parâmetro opcional `perfil_enxuto`); `SessaoCadeia._sessao_atual` (+1 linha repassando `perfil_enxuto`).
 Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_tentar_modelos_alternativos`, `SessaoCadeia._eh_erro_escalavel`.
 
