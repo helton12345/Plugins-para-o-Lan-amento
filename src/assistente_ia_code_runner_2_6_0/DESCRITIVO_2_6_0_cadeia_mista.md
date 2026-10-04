@@ -84,7 +84,7 @@ Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_te
 métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar / Forçar / Cancelar, lista com checkbox, `done`).
 **As listas `_MODELOS_SUGERIDOS["gemini*"]` e `_PERNAS_CADEIA` não foram tocadas.**
 
-**`dock_assistente.py`** (+54 / −1): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
+**`dock_assistente.py`** (+72 / −2, já com o item 12): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
 `_garantir_sessao` (chamada do complemento; etapa mista própria — a única linha removida). **`_PERNAS_CADEIA` / `_PERNAS_CADEIA_MISTA` intactas.**
 
 **`metadata.txt`:** `version=2.6.0-teste`. `changelog` não preenchido.
@@ -123,3 +123,13 @@ Uma fonte de julho/2026 diz que o OpenRouter **não tem mais** modelos DeepSeek 
 Decisão tomada: **fora da Cadeia**, porque (a) não é grátis de forma contínua; (b) com saldo recarregado a Cadeia gastaria dinheiro sem aviso (regra 8 do prompt); (c) o prompt exclui o DeepSeek do escopo.
 Já coberto sem código extra: se o OpenRouter voltar a listar um DeepSeek `:free`, "Verificar modelos" o encontra e você o marca.
 Wrappers não oficiais de "DeepSeek grátis" (link `FreeDeepseekAPI-EN`) **não foram abertos nem recomendados**: costumam usar sessão/token de terceiros e o plugin envia código do projeto às IAs.
+
+## 12. Ajustes pedidos depois (A e B — chamadas à toa no início)
+
+Diagnóstico: o diário só era lido na 1ª mensagem; com o projeto ainda sem arquivo salvo, nunca mais era tentado, e o Smith improvisava scripts PyQGIS e relia a memória (já carregada) — 8 chamadas em vez de 2.
+- **A — `dock_assistente.py`:** `_bloco_diario_primeira_mensagem` marca `_diario_pendente=True` quando o projeto ainda não foi salvo (aviso uma vez só); `enviar_mensagem` passa a tentar o diário também quando `_diario_pendente`
+  (linha `if conversa_nova or getattr(self, "_diario_pendente", False):`, a única linha alterada). Qualquer outra situação (lido, não achei, erro) zera o pendente.
+- **B — `_SYSTEM_INSTRUCTION` (dock):** parágrafo "ECONOMIA DE CHAMADAS" ao final (não chamar `obter_info_projeto` se o contexto já veio; não reler a memória carregada; ler o diário com `reler_diario_execucao`, nunca por script). O perfil enxuto não mudou.
+- Testes novos: 3 (`68 passed`).
+- **Backup NÃO alterado.** Causa confirmada pelo usuário: a pasta de backup foi escolhida **dentro** da pasta do projeto; o plugin então apaga a configuração e pergunta de novo a cada script (`_fazer_backup_projeto_atual`, linha que chama `salvar_pasta_backup("")`).
+  Solução sem código: escolher uma pasta **fora** de `F:\Santa Cruz` (de preferência em outro disco). Correção em código só com confirmação.
