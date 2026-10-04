@@ -84,7 +84,7 @@ Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_te
 métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar / Forçar / Cancelar, lista com checkbox, `done`).
 **As listas `_MODELOS_SUGERIDOS["gemini*"]` e `_PERNAS_CADEIA` não foram tocadas.**
 
-**`dock_assistente.py`** (+116 / −10, já com os itens 12 e do backup): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
+**`dock_assistente.py`** (+119 / −10, já com os itens 12 a 13): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
 `_garantir_sessao` (chamada do complemento; etapa mista própria — a única linha removida). **`_PERNAS_CADEIA` / `_PERNAS_CADEIA_MISTA` intactas.**
 
 **`metadata.txt`:** `version=2.6.0-teste`. `changelog` não preenchido.
@@ -140,3 +140,11 @@ Diagnóstico: o diário só era lido na 1ª mensagem; com o projeto ainda sem ar
   - mantidos: poda de 5 zips por projeto, fallback "só copia o arquivo do projeto" acima do limite.
   - 4 testes novos (72 no total), incluindo "o diálogo de pasta não pode abrir" e "um zip não contém o outro".
   - **Atenção:** `limpar_arquivos_nao_usados` só ignora pastas chamadas `_backups_automaticos_smith` ou `_backups` (`ferramentas_ia.py`, `_PASTAS_BACKUP_IGNORADAS`, não alterado). Se a sua pasta de backup dentro do projeto tem outro nome, os zips dela podem aparecer na lista de "arquivos não usados" — não aprove a limpeza dela, ou renomeie a pasta para `_backups`.
+
+## 13. Limpeza de arquivos DESLIGADA (pedido do usuário)
+
+`ferramentas_ia.py` (+9 linhas no fim, nada removido): conjunto `FERRAMENTAS_DESLIGADAS = {"analisar_arquivos_nao_usados", "limpar_arquivos_nao_usados"}` e filtro in-place dos 3 registros
+(`FERRAMENTAS_AGENTE` — Gemini; `DEFINICOES_FERRAMENTAS_CLAUDE` — Claude, OpenAI-compatíveis e lista do MCP; `_FERRAMENTAS_POR_NOME` — worker e MCP). Ficam 16 definições em vez de 18.
+O código das funções permanece: **para religar, esvazie `FERRAMENTAS_DESLIGADAS`**.
+`dock_assistente.py`: parágrafo "LIMPEZA DE ARQUIVOS NÃO USADOS: está DESLIGADA…" ao final de `_SYSTEM_INSTRUCTION`. `perfil_enxuto.py`: frase ajustada. Teste novo (73 no total).
+Não alterados: popup/backup do `executar_codigo_pyqgis`, `FERRAMENTAS_DESTRUTIVAS_LOCAIS`, `_PASTAS_BACKUP_IGNORADAS`.
