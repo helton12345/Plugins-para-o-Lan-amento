@@ -249,3 +249,11 @@ Auditoria: os 105 achados BRUTOS (não verificados) estão em `AUDITORIA_BRUTA_2
   - Mudar etapa/modelos rápidos/travar reinicia a Cadeia rápida aberta.
 - Testes: 154 no total (incluem o diálogo em Qt real: opção nova, etapas, grupo e cache próprios).
 - **Risco conhecido:** com o Lite fora, a Cadeia Gemini fica sem a última rede de segurança quando as 4 chaves Flash esgotam a cota do dia.
+
+## 22. GitHub Models: catálogo respondeu "OK" em texto puro
+
+Sintoma (diagnóstico da 2.6.0): `GET https://models.github.ai/catalog/models` → HTTP 200, `text/plain`, corpo `OK` (sem redirecionamento). Sem acesso ao GitHub no ambiente de desenvolvimento, a causa não foi reproduzida. Mudanças em `descoberta_modelos.py`:
+- GET de listagem **sem `Content-Type`** (a doc oficial não manda; o POST continua mandando) e com `User-Agent`; 2ª tentativa com `Accept: application/json` simples.
+- Se o catálogo ainda não vier em JSON, usa uma **lista embutida** de 13 candidatos (`_CANDIDATOS_EMBUTIDOS_GITHUB`, ids `publisher/modelo`, palpites): o filtro por nome separa fortes e fracos (modo normal/rápido) e o ping/teste real confirma quais existem. A estimativa avisa ("o catálogo não respondeu em JSON; usando lista embutida (HTTP 200, tipo 'text/plain', texto 'OK' …)"). Groq/OpenRouter continuam levantando erro claro se a listagem não for JSON.
+- Para descobrir a causa real, rodar no PC (PowerShell): `curl.exe -i -H "Accept: application/vnd.github+json" -H "Authorization: Bearer SEU_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://models.github.ai/catalog/models` — JSON = problema nos cabeçalhos do plugin; "OK" de novo = token/conta/rede/proxy.
+- 155 testes.
