@@ -84,7 +84,7 @@ Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_te
 métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar / Forçar / Cancelar, lista com checkbox, `done`).
 **As listas `_MODELOS_SUGERIDOS["gemini*"]` e `_PERNAS_CADEIA` não foram tocadas.**
 
-**`dock_assistente.py`** (+72 / −2, já com o item 12): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
+**`dock_assistente.py`** (+67 / −3, já com o item 12): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
 `_garantir_sessao` (chamada do complemento; etapa mista própria — a única linha removida). **`_PERNAS_CADEIA` / `_PERNAS_CADEIA_MISTA` intactas.**
 
 **`metadata.txt`:** `version=2.6.0-teste`. `changelog` não preenchido.
