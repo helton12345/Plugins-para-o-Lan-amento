@@ -79,12 +79,12 @@ Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_te
 
 **`configuracoes.py`** (+12 / −0): `_MODELOS_PADRAO` (+`github`, +`openrouter`); novas `obter_etapa_cadeia_mista` / `salvar_etapa_cadeia_mista`.
 
-**`dialog_configuracoes.py`** (+239 / −5, já com o item 14): `_PROVEDORES` (+`cadeia_mista`); novas `_PERNAS_CADEIA_MISTA`, `_PROVEDORES_VERIFICACAO`, `_ICONES_STATUS`, `_MODELOS_SUGERIDOS.update(...)` (só chaves groq/github/openrouter) e `_PROVEDORES_FOLHA += [...]`;
+**`dialog_configuracoes.py`** (+244 / −6, já com os itens 14 e 18): `_PROVEDORES` (+`cadeia_mista`); novas `_PERNAS_CADEIA_MISTA`, `_PROVEDORES_VERIFICACAO`, `_ICONES_STATUS`, `_MODELOS_SUGERIDOS.update(...)` (só chaves groq/github/openrouter) e `_PROVEDORES_FOLHA += [...]`;
 `__init__` (whitelist do provedor; `_repopular_pernas` + `_etapa_salva_para`; grupo no layout); `_slot_atual`, `_atualizar_visibilidade_campos`, `_ao_mudar_provedor`, `salvar_e_fechar` (etapa mista em chave própria; `_gravar_modelos_marcados`);
 métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar / Forçar / Cancelar, lista com checkbox, `done`).
 **As listas `_MODELOS_SUGERIDOS["gemini*"]` e `_PERNAS_CADEIA` não foram tocadas.**
 
-**`dock_assistente.py`** (+128 / −12, já com os itens 12, 13 e 16): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
+**`dock_assistente.py`** (+163 / −13, já com os itens 12, 13, 16, 17 e 18): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
 `_garantir_sessao` (chamada do complemento; etapa mista própria — a única linha removida). **`_PERNAS_CADEIA` / `_PERNAS_CADEIA_MISTA` intactas.**
 
 **`metadata.txt`:** `version=2.6.0-teste`. `changelog` não preenchido.
@@ -96,7 +96,7 @@ métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar 
 - Candidatos: exclui embed/whisper/tts/audio/image/rerank/moderation/guard/safeguard; OpenRouter só preço zero **e** `tools`; nunca testa modelo pago. Máx. **8** por execução (`MAX_TESTES_POR_EXECUCAO`), 1,5 s de pausa, sequencial, sem retentativa.
 - Para **todo o provedor** no 1º 429 ou 401/403 (resto = "não testado"). 429 por tokens no teste de realidade vira `grande_demais` e não para.
 - Cache `AssistenteIACodeRunner/modelos_verificados_<provedor>`; não retesta o mesmo modelo no mesmo dia (exceto "Forçar novo teste"). Os resultados são gravados na hora, mas a **marcação (`usar`) só ao confirmar o diálogo**.
-- Marcados viram etapas **no fim** da Cadeia mista (ordem Groq → GitHub → OpenRouter), sem mudar as etapas fixas. Sem marcados: pernas idênticas à 2.5.2 (exceto o perfil enxuto em Groq/GitHub) — teste `test_sem_marcados_pernas_identicas_exceto_perfil_enxuto`.
+- ~~Marcados viram etapas no fim da Cadeia mista~~ **substituído no item 18**: os verificados entram NO LUGAR da etapa fixa do provedor. Sem marcados: pernas idênticas à 2.5.2 (exceto o perfil enxuto em Groq/GitHub) — teste `test_sem_marcados_pernas_identicas_exceto_perfil_enxuto`.
 - Chave de API nunca em `detalhe`, log, `print` nem mensagem de erro (`_sanear`; teste dedicado).
 
 ## 9. Checklist manual no QGIS (você executa)
@@ -143,7 +143,7 @@ Diagnóstico: o diário só era lido na 1ª mensagem; com o projeto ainda sem ar
 
 ## 13. Limpeza de arquivos DESLIGADA (pedido do usuário)
 
-`ferramentas_ia.py` (+9 linhas no fim, nada removido): conjunto `FERRAMENTAS_DESLIGADAS = {"analisar_arquivos_nao_usados", "limpar_arquivos_nao_usados"}` e filtro in-place dos 3 registros
+`ferramentas_ia.py` (+9 linhas no fim): conjunto `FERRAMENTAS_DESLIGADAS = {"analisar_arquivos_nao_usados", "limpar_arquivos_nao_usados"}` e filtro in-place dos 3 registros
 (`FERRAMENTAS_AGENTE` — Gemini; `DEFINICOES_FERRAMENTAS_CLAUDE` — Claude, OpenAI-compatíveis e lista do MCP; `_FERRAMENTAS_POR_NOME` — worker e MCP). Ficam 16 definições em vez de 18.
 O código das funções permanece: **para religar, esvazie `FERRAMENTAS_DESLIGADAS`**.
 `dock_assistente.py`: parágrafo "LIMPEZA DE ARQUIVOS NÃO USADOS: está DESLIGADA…" ao final de `_SYSTEM_INSTRUCTION`. `perfil_enxuto.py`: frase ajustada. Teste novo (73 no total).
@@ -179,3 +179,29 @@ Além disso, um **erro meu**: o perfil enxuto cortava a memória nos primeiros 2
   A frase antiga ("exige startEditing() antes e commitChanges() depois") foi trocada para não contradizer a regra nova.
   **Limite conhecido:** é regra de prompt, não trava mecânica. Scripts salvos (`executar_script_salvo`) que já tenham `commitChanges()` dentro continuam gravando; o popup de confirmação do `executar_codigo_pyqgis` continua sendo a trava real.
 - Testes novos (85 no total).
+
+## 17. TRAVA no código: scripts não salvam edições de camada nem apagam (pedido do usuário)
+
+`ferramentas_ia.py` (total do arquivo: +152 / −4; as 4 linhas removidas são 3 de docstring e a linha do `with` do executor). Duas camadas, sempre ativas (inclusive no modo automático):
+1. **`verificar_script_bloqueado(script)` — análise ANTES de rodar** (AST). Bloqueia `commitChanges`, `saveEdits`, `os.remove/unlink/rmdir/removedirs`, `shutil.rmtree`, `.unlink`, `.rmdir`, `send2trash`, `QFile.remove`, `deleteShapeFile`,
+   `from os import remove…` e a string `"commitChanges"` (getattr). Nada é executado. Chamada em `executar_codigo_pyqgis` e, **antes do popup e do backup**, em `_ExecutorThreadPrincipal._executar` (dock) — serve também ao `executar_script_salvo`.
+2. **`_bloquear_salvar_e_apagar()` — reforço durante a execução**, para o que escapar da análise (`getattr`, alias, módulos importados): `os.remove/unlink/rmdir/removedirs`, `shutil.rmtree`, `Path.unlink/rmdir`, `QgsVectorLayer.commitChanges` e as gravações diretas
+   `addFeatures/deleteFeatures/changeAttributeValues/changeGeometryValues/addAttributes/deleteAttributes` do provedor levantam erro com a mensagem `BLOQUEADO…`. **Liberados:** camadas e provedores em **memória** (resultados temporários) e apagar dentro da **pasta temporária do sistema** (processing).
+   Cada troca é protegida por `try`: se uma classe do QGIS não aceitar a troca, só a camada 1 vale. Tudo é restaurado no `finally`.
+- **Continua permitido:** editar com a edição pendente (inclusive `deleteFeature` no buffer), criar camadas/arquivos novos, `removeMapLayer`, o botão Salvar edições do QGIS.
+- **Limites conhecidos:** não cobre código nativo (C++/GDAL), p. ex. `QgsVectorFileWriter` regravando um arquivo existente; apagar fica proibido também para arquivos temporários do próprio script fora da pasta temp do sistema. O popup/Lixeira (`_apagar_para_lixeira`) permanece no código, mas nunca é alcançado.
+- Prompts (completo e enxuto): avisam que o plugin bloqueia e que, ao receber "BLOQUEADO", a IA deve avisar o usuário em vez de contornar.
+- Testes: `tests/test_trava_salvar_apagar.py` (análise, execução, reforço, restauração, dock antes do popup). **Não testado no QGIS real** (a troca de métodos de classes sip foi testada com classes de PyQt/Python comuns).
+
+## 18. Cadeia mista: os modelos verificados SUBSTITUEM a etapa fixa (pedido do usuário)
+
+Problema: a verificação só acrescentava modelos no fim; a etapa fixa quebrada continuava na Cadeia e o que passava só entrava depois de confirmar o diálogo.
+Agora (`descoberta_modelos.py`: `modelo_funciona`, `modelo_nao_funciona`, `usar_efetivo`, `modelos_para_cadeia`; `dock_assistente.py`: `_complementar_pernas_mista`, `_indice_inicial_mista`, `_descrever_cadeia`; `dialog_configuracoes.py`):
+- Provedor **nunca verificado**: etapa fixa de sempre (igual à 2.5.2).
+- Provedor **verificado**: a etapa fixa é trocada pelos modelos que funcionam, **na mesma posição** (uma etapa por modelo, mesma chave, perfil enxuto em Groq/GitHub), e as etapas são renumeradas.
+- **Entram sozinhos** os que passaram nos dois testes (ping + requisição real), sem precisar confirmar o diálogo. **Saem** os `nao_existe` e `sem_ferramentas`. `limite`, `erro`, `grande_demais` e chave inválida **não tiram** ninguém (são passageiros).
+- Se **todos** os testados forem `nao_existe`/`sem_ferramentas` (ou o usuário desmarcar tudo), a etapa do provedor **sai** da Cadeia. Se houver dúvida (só limites/erros), a etapa fixa fica.
+- A escolha do usuário em ⚙ (campo `confirmado` na gravação) vale sobre a automática; falha passageira não derruba modelo já confirmado; modelo confirmado que passa a não existir sai.
+- A etapa inicial escolhida em ⚙ acompanha a montagem (se a etapa saiu, vale a próxima que sobrou). Ao criar a conversa o chat mostra: **"Sistema: Cadeia mista montada: 1. … · 2. …"** (só etapas com chave).
+- A Cadeia nova vale na próxima conversa; com OK no ⚙ o plugin reinicia a conversa da Cadeia mista e avisa.
+- Testes: 121 no total; o fluxo verificação → lista → OK → Cadeia roda também em Qt real (`tests/dialogo_qt_real_script.py`).
