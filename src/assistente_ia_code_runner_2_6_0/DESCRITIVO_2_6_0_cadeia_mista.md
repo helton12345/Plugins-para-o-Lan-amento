@@ -93,7 +93,7 @@ métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar 
 
 - Só sob demanda (botão); **nada roda ao abrir o QGIS nem o diálogo**. Rede em `QThread`.
 - Fluxo: **Verificar** → lista e filtra (sem gastar tokens) → mostra estimativa e pede **confirmação** → ping com ferramenta fictícia → teste de realidade com a **classe real** (perfil que a Cadeia usaria) → lista com ✅ ⚠️ 🐘 ⏳ ❌ → você marca → **OK** grava.
-- Candidatos: exclui embed/whisper/tts/audio/image/rerank/moderation/guard/safeguard; OpenRouter só preço zero **e** `tools`; nunca testa modelo pago. Máx. **8** por execução (`MAX_TESTES_POR_EXECUCAO`), 1,5 s de pausa, sequencial, sem retentativa.
+- Candidatos: exclui embed/whisper/tts/audio/image/rerank/moderation/guard/safeguard; OpenRouter só preço zero **e** `tools`; nunca testa modelo pago. ~~Máx. 8 por execução~~ **sem limite (item 19)**; sequencial, sem retentativa.
 - Para **todo o provedor** no 1º 429 ou 401/403 (resto = "não testado"). 429 por tokens no teste de realidade vira `grande_demais` e não para.
 - Cache `AssistenteIACodeRunner/modelos_verificados_<provedor>`; não retesta o mesmo modelo no mesmo dia (exceto "Forçar novo teste"). Os resultados são gravados na hora, mas a **marcação (`usar`) só ao confirmar o diálogo**.
 - ~~Marcados viram etapas no fim da Cadeia mista~~ **substituído no item 18**: os verificados entram NO LUGAR da etapa fixa do provedor. Sem marcados: pernas idênticas à 2.5.2 (exceto o perfil enxuto em Groq/GitHub) — teste `test_sem_marcados_pernas_identicas_exceto_perfil_enxuto`.
@@ -205,3 +205,11 @@ Agora (`descoberta_modelos.py`: `modelo_funciona`, `modelo_nao_funciona`, `usar_
 - A etapa inicial escolhida em ⚙ acompanha a montagem (se a etapa saiu, vale a próxima que sobrou). Ao criar a conversa o chat mostra: **"Sistema: Cadeia mista montada: 1. … · 2. …"** (só etapas com chave).
 - A Cadeia nova vale na próxima conversa; com OK no ⚙ o plugin reinicia a conversa da Cadeia mista e avisa.
 - Testes: 121 no total; o fluxo verificação → lista → OK → Cadeia roda também em Qt real (`tests/dialogo_qt_real_script.py`).
+
+## 19. Verificar TODOS os modelos disponíveis (pedido do usuário)
+
+`descoberta_modelos.py`: `MAX_TESTES_POR_EXECUCAO = None` (antes 8) — todos os candidatos que passam no filtro são testados; o parâmetro `max_testes` continua existindo (opcional).
+Para a verificação não parar cedo por limite **por minuto**, a pausa entre chamadas agora é por provedor (`PAUSA_POR_PROVEDOR`): GitHub 6,2 s (≈ 10 req/min), OpenRouter 3,1 s (20 req/min), Groq 2,1 s (30 req/min).
+A estimativa mostrada antes de rodar passou a informar nº de requisições (até 2 por modelo: ping + teste real) e o tempo estimado, e avisa que, se o limite **diário** do plano acabar, a execução para sozinha no primeiro 429/401/403 (o resto fica "não testado") e que dá para cancelar.
+Continua valendo: confirmação antes de rodar, não retestar no mesmo dia (exceto "Forçar novo teste"), nunca testar modelo pago, chave nunca em texto de erro.
+Consequências práticas: OpenRouter `:free` tem só ≈ 50 req/dia (≈ 25 modelos por dia); GitHub ≈ 50–150/dia. Quem não coube no limite do dia aparece como "não testado" e é completado na próxima verificação (os já testados no dia não são refeitos).
