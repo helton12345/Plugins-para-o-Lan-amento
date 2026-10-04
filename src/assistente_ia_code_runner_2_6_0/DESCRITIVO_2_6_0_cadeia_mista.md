@@ -213,3 +213,25 @@ Para a verificação não parar cedo por limite **por minuto**, a pausa entre ch
 A estimativa mostrada antes de rodar passou a informar nº de requisições (até 2 por modelo: ping + teste real) e o tempo estimado, e avisa que, se o limite **diário** do plano acabar, a execução para sozinha no primeiro 429/401/403 (o resto fica "não testado") e que dá para cancelar.
 Continua valendo: confirmação antes de rodar, não retestar no mesmo dia (exceto "Forçar novo teste"), nunca testar modelo pago, chave nunca em texto de erro.
 Consequências práticas: OpenRouter `:free` tem só ≈ 50 req/dia (≈ 25 modelos por dia); GitHub ≈ 50–150/dia. Quem não coube no limite do dia aparece como "não testado" e é completado na próxima verificação (os já testados no dia não são refeitos).
+
+## 20. Nova base (zip anexado) e correções da Cadeia (pedido do usuário)
+
+**Base trocada:** a partir daqui a base é o zip `assistente_ia_code_runner_2_6_0_teste_1.zip` enviado pelo usuário (superconjunto da minha versão: `descoberta_modelos.py`, `dialog_configuracoes.py`, `dock_assistente.py`, `perfil_enxuto.py`, `__init__.py`, `metadata.txt` mais novos — modelos lite/nano/tiny/micro/≤9B fora da Cadeia, modelo que para num 429 volta para a fila, fechar o ⚙ sem travar, pausas 2/3,3/6,5 s).
+Os números de linhas das seções anteriores se referem à minha versão ANTES da troca; o `DIFF_2_5_2_para_2_6_0.patch` foi regenerado sobre a base nova. **Não** estão neste zip os patches 1–8 do outro Claude (copias_seguras etc.).
+Auditoria: os 105 achados BRUTOS (não verificados) estão em `AUDITORIA_BRUTA_2_6_0.md/.json`; nenhuma auditoria pesada nova foi rodada (regra permanente em `CLAUDE.md`). Cada correção abaixo tem teste curto (`tests/test_cadeia_correcoes.py`, 146 testes no total).
+
+`provedor_ia.py` — `SessaoCadeia`:
+- **Laço infinito** quando a última etapa não tem chave: a volta agora conta; depois de 3 voltas levanta o último erro (ou "Nenhuma etapa da Cadeia tem chave configurada").
+- **Principal sem chave**: não "recupera prioridade" (recriava a sessão a cada mensagem).
+- **`_eh_erro_escalavel`** passou a reconhecer erros das etapas Groq/GitHub/OpenRouter: `API erro 401/402/403/408/413/5xx`, timeout/ConnectionError, `tokens_limit_reached`, `request too large`, `invalid_api_key`, `decommissioned`, `insufficient credits` (as listas/rotação do Gemini não foram tocadas).
+- **Falha depois de a ferramenta rodar** (`enviar_resultados_ferramentas`): marca `_avancar_pendente`; na próxima mensagem a Cadeia muda de etapa de verdade; o aviso diz para NÃO repetir o que já foi executado.
+- **Transição preventiva** (contexto ≥ 75%) não é desfeita na mensagem seguinte (10 min sem recuperar a principal).
+- **Resumo de passagem**: memória "pura" + só os 2 resumos mais recentes (≤ 6.000 caracteres cada) — não cresce sem limite; **turnos antigos herdados** pela etapa nova (`consultar_historico_antigo` e o 💾 enxergam o que as anteriores guardaram).
+`_SessaoCompativelComRegrasGemini` (Groq/GitHub/OpenRouter):
+- **Mensagem que falha sai do histórico** (como no Gemini): a próxima etapa recebe a pergunta uma vez só.
+- **Sem dormir até 60 s** em 429 de limite diário ou espera > 15 s (a Cadeia troca de etapa).
+- **Resumo de passagem local e limpo** (sem chamar a IA que acabou de falhar; sem o JSON do contexto automático nem o diário).
+- **Retorno de ferramenta ≤ 6.000 caracteres no perfil enxuto** (o de 15.000 estourava os 8.000 tokens); aviso de memória cortada corrigido.
+`dock_assistente.py`: mudar **"Travar modelo"** em ⚙ reinicia também a Cadeia mista; sem contexto automático a pergunta ganha o marcador `[PERGUNTA DO USUÁRIO]` (histórico antigo e resumos ficam limpos).
+`descoberta_modelos.py` / `dialog_configuracoes.py`: verificação interrompida, cancelada ou com 429/rede **mantém o resultado anterior** do modelo (✅ continua ✅; nada vira "não testado"); dar OK **sem mexer na lista não marca nada como escolha do usuário** (só vira "confirmado" o que ele mudou) — antes, limite/erro + OK removia a etapa inteira do provedor da Cadeia; título do grupo corrigido ("substituem o modelo fixo da etapa").
+**Não corrigido (relatado):** `SessaoGemini.texto_da_conversa` ignora turnos fora da janela (legado, Gemini); perfil enxuto pode passar de 8.000 tokens com contexto automático + diário grandes; plano B do conhecimento e bloco de scripts salvos citam ferramentas que a etapa enxuta não tem; Cancelar no ⚙ não desfaz o resultado já gravado da verificação.
