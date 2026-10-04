@@ -273,3 +273,10 @@ Sintoma (diagnóstico da 2.6.0): `GET https://models.github.ai/catalog/models` �
 - `metadata.txt`: versão `2.6.3-teste` (a do zip 2.6.3 enviado pelo usuário; o código dele era idêntico ao meu).
 - **Não coberto:** `github_cliente.py` (API do GitHub para memória/repositório) e o SDK do Gemini seguem usando as configurações de proxy normais. **Segurança:** um token `ghp_…` foi colado numa conversa — deve ser revogado.
 - 168 testes.
+
+## 25. Filtro de modelo fraco passa a incluir "mini" (pedido do usuário)
+
+`descoberta_modelos.py`: `mini` entra em `_RACIOCINIO_FRACO_NO_ID` (`lite`, `nano`, `tiny`, `micro`, `mini`). Efeito: `gpt-4o-mini`, `gpt-4.1-mini`, `o3-mini`, `o4-mini` e `Phi-3.5-mini` ficam **fora** das cadeias normais (verificação normal não os lista) e **entram** na verificação da Cadeia rápida.
+- **Palavra inteira:** o nome agora é comparado como palavra (`(?<![a-z])…(?![a-z])`), senão `mini` pegaria `gemini-*` e `minimax`. Isso corrigiu também um erro que já existia: `microsoft/phi-4` era marcado como fraco só porque "microsoft" contém "micro" (agora é modelo normal).
+- **Padrões:** o modelo fixo do GitHub na Cadeia mista passou de `openai/gpt-4o-mini` para `openai/gpt-4o` (confirmado pelo usuário), e as sugestões do ⚙ foram trocadas por modelos que não são "mini". Quem já tinha `gpt-4o-mini` salvo em ⚙ mantém o valor salvo (só vale enquanto o GitHub não for verificado).
+- 187 testes.
