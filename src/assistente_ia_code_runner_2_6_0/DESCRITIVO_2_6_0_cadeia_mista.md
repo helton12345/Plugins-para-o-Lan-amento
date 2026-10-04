@@ -84,7 +84,7 @@ Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_te
 métodos novos no fim da classe (grupo "Modelos verificados", botões Verificar / Forçar / Cancelar, lista com checkbox, `done`).
 **As listas `_MODELOS_SUGERIDOS["gemini*"]` e `_PERNAS_CADEIA` não foram tocadas.**
 
-**`dock_assistente.py`** (+67 / −3, já com o item 12): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
+**`dock_assistente.py`** (+116 / −10, já com os itens 12 e do backup): `abrir_configuracoes` (invalida a Cadeia mista ao mudar etapa/modelos marcados); métodos novos `_modelos_verificados_marcados` e `_complementar_pernas_mista`;
 `_garantir_sessao` (chamada do complemento; etapa mista própria — a única linha removida). **`_PERNAS_CADEIA` / `_PERNAS_CADEIA_MISTA` intactas.**
 
 **`metadata.txt`:** `version=2.6.0-teste`. `changelog` não preenchido.
@@ -131,5 +131,12 @@ Diagnóstico: o diário só era lido na 1ª mensagem; com o projeto ainda sem ar
   (linha `if conversa_nova or getattr(self, "_diario_pendente", False):`, a única linha alterada). Qualquer outra situação (lido, não achei, erro) zera o pendente.
 - **B — `_SYSTEM_INSTRUCTION` (dock):** parágrafo "ECONOMIA DE CHAMADAS" ao final (não chamar `obter_info_projeto` se o contexto já veio; não reler a memória carregada; ler o diário com `reler_diario_execucao`, nunca por script). O perfil enxuto não mudou.
 - Testes novos: 3 (`68 passed`).
-- **Backup NÃO alterado.** Causa confirmada pelo usuário: a pasta de backup foi escolhida **dentro** da pasta do projeto; o plugin então apaga a configuração e pergunta de novo a cada script (`_fazer_backup_projeto_atual`, linha que chama `salvar_pasta_backup("")`).
-  Solução sem código: escolher uma pasta **fora** de `F:\Santa Cruz` (de preferência em outro disco). Correção em código só com confirmação.
+- **Backup (corrigido a pedido do usuário):** a pasta de backup tinha sido escolhida **dentro** da pasta do projeto; o plugin então apagava a configuração salva (`salvar_pasta_backup("")`) e abria o diálogo a cada script.
+  Agora, em `dock_assistente.py` (`_ExecutorThreadPrincipal._fazer_backup_projeto_atual`):
+  - subpasta do projeto como pasta de backup é **aceita e mantida**, sem diálogo; o zip simplesmente **deixa essa subpasta de fora** (senão um backup entraria no outro). Helpers novos: `_arquivos_do_projeto`, `_tamanho_sem_pasta`, `_zipar_sem_pasta`; `import os` e `import zipfile` acrescentados;
+  - o limite de 500 MB passa a ignorar a pasta de backups nesse caso;
+  - **pasta fora do projeto: caminho antigo idêntico** (`make_archive`);
+  - a **própria pasta do projeto** como destino continua recusada (apaga a configuração e avisa), pois nada sobraria para zipar — única linha de texto alterada;
+  - mantidos: poda de 5 zips por projeto, fallback "só copia o arquivo do projeto" acima do limite.
+  - 4 testes novos (72 no total), incluindo "o diálogo de pasta não pode abrir" e "um zip não contém o outro".
+  - **Atenção:** `limpar_arquivos_nao_usados` só ignora pastas chamadas `_backups_automaticos_smith` ou `_backups` (`ferramentas_ia.py`, `_PASTAS_BACKUP_IGNORADAS`, não alterado). Se a sua pasta de backup dentro do projeto tem outro nome, os zips dela podem aparecer na lista de "arquivos não usados" — não aprove a limpeza dela, ou renomeie a pasta para `_backups`.
