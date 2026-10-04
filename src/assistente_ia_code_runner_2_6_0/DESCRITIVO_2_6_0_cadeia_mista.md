@@ -72,7 +72,7 @@ Diff completo para revisão: `DIFF_2_5_2_para_2_6_0.patch`. Linhas removidas/alt
 
 **NOVOS (nada existia antes):** `descoberta_modelos.py`, `perfil_enxuto.py`, `worker_verificacao.py`, `tests/*`.
 
-**`provedor_ia.py`** (+133 / −7, já com o item 15): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
+**`provedor_ia.py`** (+127 / −6, já com o item 15): classe nova `_SessaoCompativelComRegrasGemini` (linhas 1333–1442);
 alteradas: 1446 `SessaoGroq`, 1450 `SessaoOpenRouter`, 1454 `SessaoGitHub` (classe-mãe **e** `_URL`);
 `criar_sessao` (assinatura + ramo `classe_openai`: parâmetro opcional `perfil_enxuto`); `SessaoCadeia._sessao_atual` (+1 linha repassando `perfil_enxuto`).
 Não tocados: `SessaoGemini`, `_modelos_pendentes`, `modelos_alternativos`, `_tentar_modelos_alternativos`, `SessaoCadeia._eh_erro_escalavel`.
