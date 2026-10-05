@@ -280,3 +280,12 @@ Sintoma (diagnóstico da 2.6.0): `GET https://models.github.ai/catalog/models` �
 - **Palavra inteira:** o nome agora é comparado como palavra (`(?<![a-z])…(?![a-z])`), senão `mini` pegaria `gemini-*` e `minimax`. Isso corrigiu também um erro que já existia: `microsoft/phi-4` era marcado como fraco só porque "microsoft" contém "micro" (agora é modelo normal).
 - **Padrões:** o modelo fixo do GitHub na Cadeia mista passou de `openai/gpt-4o-mini` para `openai/gpt-4o` (confirmado pelo usuário), e as sugestões do ⚙ foram trocadas por modelos que não são "mini". Quem já tinha `gpt-4o-mini` salvo em ⚙ mantém o valor salvo (só vale enquanto o GitHub não for verificado).
 - 187 testes.
+
+## 26. Modelos verificados vão para o menu "Modelo" do ⚙ (pedido do usuário)
+
+`dialog_configuracoes.py` (só o diálogo; a Cadeia não mudou):
+- `_modelos_verificados_do_slot(slot)` (novo): ids com `testado_em` e `usar_efetivo` (os mesmos que entram na Cadeia — ✅ nos dois testes, sem os ❌ e, no modo normal, sem os fracos). Lê a lista da tela (se houver) ou o cache; sem rede.
+- `_carregar_campos_do_slot`: o menu "Modelo" agora lista **primeiro os verificados**, depois as sugestões que ainda não estão nele. O modelo salvo continua selecionado.
+- `_recarregar_modelos_dropdown(provedor)` (novo), chamado no fim de `_ao_concluir_verificacao` e em "Nada novo a testar hoje": atualiza o menu sozinho **se a etapa aberta é a do provedor verificado** (chave digitada e modelo escolhido são preservados).
+- A escolha no menu não limita a Cadeia: ela continua usando todos os verificados marcados.
+- Teste novo (seção 7 de `tests/dialogo_qt_real_script.py`, PyQt5 real): ✅ aparecem no menu, ❌ e fracos (modo normal) não, outra etapa não muda o menu, modo rápido aceita o fraco ✅. 187 testes.
